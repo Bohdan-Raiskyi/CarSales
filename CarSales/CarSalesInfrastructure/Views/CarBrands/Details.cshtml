@@ -1,0 +1,24 @@
+﻿@model CarSalesDomain.Model.CarBrand
+
+@{
+    ViewData["Title"] = "Деталі";
+}
+
+<h2>Деталі</h2>
+
+<div>
+    <h4>Марка авто</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.BrandName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.BrandName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Повернутися до списку</a>
+</div>

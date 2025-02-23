@@ -1,0 +1,33 @@
+﻿@model CarSalesDomain.Model.Region
+
+@{
+    ViewData["Title"] = "Створити";
+}
+
+<h2>Створити</h2>
+
+<h4>Регіон</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RegName" class="control-label"></label>
+                <input asp-for="RegName" class="form-control" />
+                <span asp-validation-for="RegName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Повернутися до списку</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
