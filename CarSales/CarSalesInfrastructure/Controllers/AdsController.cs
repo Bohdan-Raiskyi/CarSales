@@ -25,6 +25,21 @@ namespace CarSalesInfrastructure.Controllers
             var carSalesContext = _context.Ads.Include(a => a.Brand).Include(a => a.PriceRange).Include(a => a.Region).Include(a => a.Type).Include(a => a.User);
             return View(await carSalesContext.ToListAsync());
         }
+        //public async Task<ActionResult> Index(int? id, string? name)
+        //{
+        //    if (id == null) return RedirectToAction("PriceRanges", "Index");
+
+        //    // Закріплення книг за категорією
+        //    ViewBag.PriceRangeId = id;
+        //    ViewBag.RangeLabel = name;
+
+        //    var booksByCategory = await _context.Ads
+        //        .Where(b => b.PriceRangeId == id)
+        //        .Include(b => b.PriceRange)
+        //        .ToListAsync();
+
+        //    return View(booksByCategory);
+        //}
 
 
         // GET: Ads/Details/5

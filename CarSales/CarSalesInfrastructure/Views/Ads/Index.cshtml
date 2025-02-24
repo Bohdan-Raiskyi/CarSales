@@ -94,3 +94,83 @@
 }
     </tbody>
 </table>
+
+<div class="row">
+    <div class="col-6">
+        <h2>Оголошення за регіонами</h2>
+        <div id="adsByRegionPie" style="width: 100%; height: 400px;"></div>
+    </div>
+
+    <div class="col-6">
+        <h2>Оголошення за ціновим діапазоном</h2>
+        <div id="adsByPriceRangePie" style="width: 100%; height: 400px;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+        google.charts.load('current', { packages: ['corechart'] });
+        google.charts.setOnLoadCallback(drawAllCharts);
+
+        function drawAllCharts() {
+            drawAdsByPriceRange();
+            drawAdsByRegion();
+        }
+
+
+        function drawAdsByPriceRange() {
+            fetch('/api/Chart/ads-by-price-range')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Ціновий діапазон');
+                    dataTable.addColumn('number', 'Кількість');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.label, item.value]);
+                    });
+
+                    const options = {
+                        title: 'Розподіл оголошень за ціновим діапазоном',
+                        is3D: false,
+                        pieHole: 0.4,
+                        legend: { position: 'right' },
+                        width: '100%',
+                        height: 400,
+                        colors: ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368', '#185ABC']
+                    };
+
+                    const chart = new google.visualization.PieChart(document.getElementById('adsByPriceRangePie'));
+                    chart.draw(dataTable, options);
+                });
+        }
+
+        function drawAdsByRegion() {
+            fetch('/api/Chart/ads-by-region')
+                .then(response => response.json())
+                .then(data => {
+                    const dataTable = new google.visualization.DataTable();
+                    dataTable.addColumn('string', 'Регіон');
+                    dataTable.addColumn('number', 'Кількість');
+
+                    data.forEach(item => {
+                        dataTable.addRow([item.label, item.value]);
+                    });
+
+                    const options = {
+                        title: 'Розподіл оголошень за регіонами',
+                        is3D: false,
+                        pieHole: 0.4,
+                        legend: { position: 'right' },
+                        width: '100%',
+                        height: 400,
+                        colors: ['#FBBC05', '#4285F4', '#34A853', '#EA4335', '#5F6368', '#185ABC']
+                    };
+
+                    const chart = new google.visualization.PieChart(document.getElementById('adsByRegionPie'));
+                    chart.draw(dataTable, options);
+                });
+        }
+    </script>
+}
