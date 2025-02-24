@@ -146,6 +146,18 @@ namespace CarSalesInfrastructure.Controllers
                 _context.Users.Remove(user);
             }
 
+            try
+            {
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Typically means a foreign key constraint or other DB error
+                TempData["DeleteError"] = "Неможливо видалити користувача, оскільки існують пов'язані записи.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

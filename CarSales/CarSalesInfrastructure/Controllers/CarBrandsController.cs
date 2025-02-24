@@ -146,6 +146,18 @@ namespace CarSalesInfrastructure.Controllers
                 _context.CarBrands.Remove(carBrand);
             }
 
+            try
+            {
+                _context.CarBrands.Remove(carBrand);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Typically means a foreign key constraint or other DB error
+                TempData["DeleteError"] = "Неможливо видалити марку, оскільки існують пов'язані записи.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

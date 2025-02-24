@@ -152,6 +152,18 @@ namespace CarSalesInfrastructure.Controllers
                 _context.Images.Remove(image);
             }
 
+            try
+            {
+                _context.Images.Remove(image);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Typically means a foreign key constraint or other DB error
+                TempData["DeleteError"] = "Неможливо видалити зображення, оскільки існують пов'язані записи.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

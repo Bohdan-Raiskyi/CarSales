@@ -146,6 +146,18 @@ namespace CarSalesInfrastructure.Controllers
                 _context.CarTypes.Remove(carType);
             }
 
+            try
+            {
+                _context.CarTypes.Remove(carType);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Typically means a foreign key constraint or other DB error
+                TempData["DeleteError"] = "Неможливо видалити тип авто, оскільки існують пов'язані записи.";
+                return RedirectToAction(nameof(Index));
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
