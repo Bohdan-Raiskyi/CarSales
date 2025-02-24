@@ -40,7 +40,8 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
-            return View(region);
+            //return View(region);
+            return RedirectToAction("Index", "Ads", new { id = region.Id, name = region.RegName });
         }
 
         // GET: Regions/Create

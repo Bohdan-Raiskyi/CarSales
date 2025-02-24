@@ -40,7 +40,8 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
-            return View(carType);
+            //return View(carType);
+            return RedirectToAction("Index", "Ads", new { id = carType.Id, name = carType.CarType1 });
         }
 
         // GET: CarTypes/Create

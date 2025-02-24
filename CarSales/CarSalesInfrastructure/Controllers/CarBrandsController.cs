@@ -40,7 +40,8 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
-            return View(carBrand);
+            //return View(carBrand);
+            return RedirectToAction("Index", "Ads", new { id = carBrand.Id, name = carBrand.BrandName });
         }
 
         // GET: CarBrands/Create

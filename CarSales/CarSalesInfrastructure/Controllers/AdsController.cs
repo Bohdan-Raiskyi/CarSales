@@ -26,6 +26,7 @@ namespace CarSalesInfrastructure.Controllers
             return View(await carSalesContext.ToListAsync());
         }
 
+
         // GET: Ads/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -46,7 +47,8 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
-            return View(ad);
+            //return View(ad);
+            return RedirectToAction("Index", "Images", new { id = ad.Id, name = ad.Name });
         }
 
         // GET: Ads/Create

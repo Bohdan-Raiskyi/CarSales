@@ -40,7 +40,8 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
-            return View(priceRange);
+            //return View(priceRange);
+            return RedirectToAction("Index", "Ads", new { id = priceRange.Id, name = priceRange.RangeLabel });
         }
 
         // GET: PriceRanges/Create
