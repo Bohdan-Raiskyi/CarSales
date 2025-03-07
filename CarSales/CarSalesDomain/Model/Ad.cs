@@ -22,12 +22,17 @@ public partial class Ad : Entity
     public int RegionId { get; set; }
 
     [Display(Name = "Ціна")]
+    [Required(ErrorMessage = "Поле 'Ціна' є обов'язковим.")]
+    [Range(0, double.MaxValue, ErrorMessage = "Ціна не може бути від'ємною.")]
     public decimal Price { get; set; }
 
     [Display(Name = "Назва оголошення")]
+    [Required(ErrorMessage = "Поле 'Назва оголошення' є обов'язковим.")]
+    [StringLength(50, ErrorMessage = "Назва оголошення не може перевищувати 50 символів.")]
     public string Name { get; set; } = null!;
 
     [Display(Name = "Опис")]
+    [StringLength(4000, ErrorMessage = "Опис не може перевищувати 4000 символів.")]
     public string? Description { get; set; }
 
     [Display(Name = "Дата створення")]
