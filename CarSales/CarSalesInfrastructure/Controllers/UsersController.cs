@@ -57,8 +57,17 @@ namespace CarSalesInfrastructure.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UserName,Email,Password,PhoneNumber,CreatedDate,Id")] User user)
         {
+            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+            {
+                ModelState.AddModelError("Email", "Користувач з такою електронною поштою вже існує.");
+                return View(user);
+            }
+
             if (ModelState.IsValid)
             {
+                // Хешуємо пароль перед збереженням
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -79,6 +88,9 @@ namespace CarSalesInfrastructure.Controllers
             {
                 return NotFound();
             }
+
+            user.Password = string.Empty;
+
             return View(user);
         }
 
@@ -93,6 +105,25 @@ namespace CarSalesInfrastructure.Controllers
             {
                 return NotFound();
             }
+
+            // Отримуємо існуючого користувача з БД
+            var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            if (existingUser == null)
+            {
+                return NotFound();
+            }
+
+            // Якщо поле пароля пусте — залишаємо старий хешований пароль
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                user.Password = existingUser.Password;
+            }
+            else
+            {
+                // Інакше хешуємо новий пароль
+                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            }
+
 
             if (ModelState.IsValid)
             {

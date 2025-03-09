@@ -22,7 +22,14 @@ namespace CarSalesInfrastructure.Controllers
         // GET: Ads
         public async Task<IActionResult> Index()
         {
-            var carSalesContext = _context.Ads.Include(a => a.Brand).Include(a => a.PriceRange).Include(a => a.Region).Include(a => a.Type).Include(a => a.User);
+            var carSalesContext = _context.Ads
+                .Include(a => a.Brand)
+                .Include(a => a.PriceRange)
+                .Include(a => a.Region)
+                .Include(a => a.Type)
+                .Include(a => a.User)
+                .OrderBy(a => a.SoldDate == null ? 0 : 1) // Активні спочатку, продані в кінці
+                .ThenByDescending(a => a.CreationDate);
             return View(await carSalesContext.ToListAsync());
         }
         //public async Task<ActionResult> Index(int? id, string? name)
@@ -158,6 +165,41 @@ namespace CarSalesInfrastructure.Controllers
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", ad.UserId);
             return View(ad);
         }
+
+        public IActionResult Sell(int id)
+        {
+            var ad = _context.Ads
+                .Include(a => a.Brand)
+                .Include(a => a.PriceRange)
+                .Include(a => a.Region)
+                .Include(a => a.Type)
+                .Include(a => a.User)
+                .FirstOrDefault(a => a.Id == id);
+
+            if (ad == null)
+            {
+                return NotFound();
+            }
+
+            return View(ad);
+        }
+
+        [HttpPost]
+        public IActionResult SellConfirmed(int id)
+        {
+            var ad = _context.Ads.Find(id);
+            if (ad == null)
+            {
+                return NotFound();
+            }
+
+            ad.SoldDate = DateTime.Now; // Встановлюємо дату продажу
+            _context.SaveChanges();
+
+            return RedirectToAction("Index", "Ads");
+        }
+
+
 
         // GET: Ads/Delete/5
         public async Task<IActionResult> Delete(int? id)

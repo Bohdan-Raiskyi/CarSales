@@ -20,14 +20,17 @@ namespace CarSalesDomain.Model
         public string Email { get; set; } = null!;
 
         [Required(ErrorMessage = "Пароль є обов'язковим.")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "Пароль має містити від 8 до 20 символів.")]
         [Display(Name = "Пароль")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "Пароль повинен містити від 8 до 20 символів.")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$",
+        ErrorMessage = "Пароль має містити хоча б одну велику літеру, одну малу, одну цифру та один спеціальний символ.")]
         public string Password { get; set; } = null!;
 
-        [Phone(ErrorMessage = "Некоректний формат номера телефону.")]
-        [StringLength(20, ErrorMessage = "Номер телефону не може перевищувати 20 символів.")]
+        [Required(ErrorMessage = "Номер телефону є обов'язковим.")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Номер телефону формату ХХХ-ХХХ-ХХ-ХХ без пробілів і символів.")]
         [Display(Name = "Телефон")]
         public string? PhoneNumber { get; set; }
+
 
         [Required]
         [Display(Name = "Дата створення")]
