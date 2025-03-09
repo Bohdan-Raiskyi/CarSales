@@ -22,11 +22,11 @@
                 <select asp-for="AdId" class="form-control" asp-items="ViewBag.AdId"></select>
                 <span asp-validation-for="AdId" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            @* <div class="form-group">
                 <label asp-for="SavedDate" class="control-label"></label>
                 <input asp-for="SavedDate" class="form-control" />
                 <span asp-validation-for="SavedDate" class="text-danger"></span>
-            </div>
+            </div> *@
             <input type="hidden" asp-for="Id" />
 
             <br />
