@@ -57,6 +57,12 @@ namespace CarSalesInfrastructure.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UserName,Email,Password,PhoneNumber,CreatedDate,Id")] User user)
         {
+            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+            {
+                ModelState.AddModelError("Email", "Користувач з такою електронною поштою вже існує.");
+                return View(user);
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(user);
