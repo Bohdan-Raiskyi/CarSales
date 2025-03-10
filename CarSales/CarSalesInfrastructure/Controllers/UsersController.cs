@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CarSalesDomain.Model;
 using CarSalesInfrastructure;
+using System.Text.RegularExpressions;
 
 namespace CarSalesInfrastructure.Controllers
 {
@@ -113,6 +114,17 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
+            // Явно видаляємо валідацію паролю
+            ModelState.Remove("Password");
+
+            // Перевіряємо валідність моделі без врахування пароля
+            bool isModelValid = ModelState.IsValid;
+
+            // Встановлюємо правильну дату створення з існуючого запису
+            user.CreatedDate = existingUser.CreatedDate;
+
+            //user.Email = existingUser.Email;
+
             // Якщо поле пароля пусте — залишаємо старий хешований пароль
             if (string.IsNullOrWhiteSpace(user.Password))
             {
@@ -120,17 +132,28 @@ namespace CarSalesInfrastructure.Controllers
             }
             else
             {
-                // Інакше хешуємо новий пароль
-                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                // Перевіряємо новий пароль на відповідність вимогам вручну
+                var passwordPattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$";
+                if (user.Password.Length < 8 || user.Password.Length > 20 ||
+                    !System.Text.RegularExpressions.Regex.IsMatch(user.Password, passwordPattern))
+                {
+                    isModelValid = false;
+                    ModelState.AddModelError("Password", "Пароль має містити від 8 до 20 символів, хоча б одну велику літеру, одну малу, одну цифру та один спеціальний символ.");
+                }
+                else
+                {
+                    // Хешуємо пароль, якщо він відповідає вимогам
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                }
             }
 
-
-            if (ModelState.IsValid)
+            if (isModelValid)
             {
                 try
                 {
                     _context.Update(user);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -143,10 +166,83 @@ namespace CarSalesInfrastructure.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
+
             return View(user);
         }
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Edit(int id, [Bind("UserName,Email,Password,PhoneNumber,CreatedDate,Id")] User user)
+        //{
+        //    if (id != user.Id)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    // Отримуємо існуючого користувача з БД
+        //    var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        //    if (existingUser == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+
+        //    // Видаляємо валідацію паролю з ModelState при редагуванні
+        //    ModelState.Remove("Password");
+
+        //    // Якщо поле пароля пусте — залишаємо старий хешований пароль
+        //    if (string.IsNullOrWhiteSpace(user.Password))
+        //    {
+        //        user.Password = existingUser.Password;
+        //    }
+        //    else
+        //    {
+        //        // Перевіряємо новий пароль на відповідність вимогам вручну
+        //        if (user.Password.Length < 8 || user.Password.Length > 20 ||
+        //            !Regex.IsMatch(user.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"))
+        //        {
+        //            ModelState.AddModelError("Password", "Пароль має містити від 8 до 20 символів, хоча б одну велику літеру, одну малу, одну цифру та один спеціальний символ.");
+        //            return View(user);
+        //        }
+
+        //        // Якщо пароль відповідає вимогам - хешуємо його
+        //        user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        //    }
+        //    //// Якщо поле пароля пусте — залишаємо старий хешований пароль
+        //    //if (string.IsNullOrWhiteSpace(user.Password))
+        //    //{
+        //    //    user.Password = existingUser.Password;
+        //    //}
+        //    //else
+        //    //{
+        //    //    // Інакше хешуємо новий пароль
+        //    //    user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+        //    //}
+
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        try
+        //        {
+        //            _context.Update(user);
+        //            await _context.SaveChangesAsync();
+        //        }
+        //        catch (DbUpdateConcurrencyException)
+        //        {
+        //            if (!UserExists(user.Id))
+        //            {
+        //                return NotFound();
+        //            }
+        //            else
+        //            {
+        //                throw;
+        //            }
+        //        }
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    return View(user);
+        //}
 
         // GET: Users/Delete/5
         public async Task<IActionResult> Delete(int? id)
