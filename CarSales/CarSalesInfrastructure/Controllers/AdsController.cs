@@ -138,6 +138,16 @@ namespace CarSalesInfrastructure.Controllers
                 return NotFound();
             }
 
+            // Отримуємо існуючого користувача з БД
+            var existingAd = await _context.Ads.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+            if (existingAd == null)
+            {
+                return NotFound();
+            }
+
+            // Встановлюємо правильну дату створення з існуючого запису
+            ad.CreationDate = existingAd.CreationDate;
+
             if (ModelState.IsValid)
             {
                 try

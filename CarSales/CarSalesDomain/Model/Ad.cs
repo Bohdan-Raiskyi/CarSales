@@ -23,8 +23,9 @@ public partial class Ad : Entity
 
     [Display(Name = "Ціна")]
     [Required(ErrorMessage = "Поле 'Ціна' є обов'язковим.")]
-    [Range(0, double.MaxValue, ErrorMessage = "Ціна не може бути від'ємною.")]
-    public decimal Price { get; set; }
+    [Range(0, int.MaxValue, ErrorMessage = "Ціна - додатнє ціле число.")]
+    public int Price { get; set; }
+
 
     [Display(Name = "Назва оголошення")]
     [Required(ErrorMessage = "Поле 'Назва оголошення' є обов'язковим.")]
