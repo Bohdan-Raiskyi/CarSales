@@ -87,22 +87,85 @@ namespace CarSalesInfrastructure.Controllers
         // POST: Ads/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Ads/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UserId,TypeId,BrandId,PriceRangeId,RegionId,Price,Name,Description,CreationDate,SoldDate,Id")] Ad ad)
         {
             if (ModelState.IsValid)
             {
+                // Отримуємо обраний ціновий діапазон
+                var priceRange = await _context.PriceRanges
+                    .FirstOrDefaultAsync(p => p.Id == ad.PriceRangeId);
+
+                if (priceRange != null)
+                {
+                    // Перевіряємо, чи входить ціна в діапазон
+                    bool isPriceInRange = IsPriceInRange(ad.Price, priceRange.RangeLabel);
+
+                    if (!isPriceInRange)
+                    {
+                        ModelState.AddModelError("Price", "Введена ціна не входить у вибраний ціновий діапазон");
+                        PrepareViewData(ad);
+                        return View(ad);
+                    }
+                }
+
                 _context.Add(ad);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            PrepareViewData(ad);
+            return View(ad);
+        }
+
+        // Метод для перевірки, чи входить ціна в діапазон
+        private bool IsPriceInRange(decimal price, string rangeLabel)
+        {
+            if (string.IsNullOrEmpty(rangeLabel))
+                return true;
+
+            // Варіант "<500" (менше ніж)
+            if (rangeLabel.StartsWith("<"))
+            {
+                if (decimal.TryParse(rangeLabel.Substring(1), out decimal maxValue))
+                {
+                    return price < maxValue;
+                }
+            }
+            // Варіант ">50000" (більше ніж)
+            else if (rangeLabel.StartsWith(">"))
+            {
+                if (decimal.TryParse(rangeLabel.Substring(1), out decimal minValue))
+                {
+                    return price > minValue;
+                }
+            }
+            // Варіант "1000-2000" (діапазон)
+            else if (rangeLabel.Contains("-"))
+            {
+                string[] parts = rangeLabel.Split('-');
+                if (parts.Length == 2 &&
+                    decimal.TryParse(parts[0], out decimal minValue) &&
+                    decimal.TryParse(parts[1], out decimal maxValue))
+                {
+                    return price >= minValue && price <= maxValue;
+                }
+            }
+
+            // Якщо формат не розпізнано, повертаємо true, щоб не блокувати створення
+            return true;
+        }
+
+        // Метод для підготовки ViewData
+        private void PrepareViewData(Ad ad)
+        {
             ViewData["BrandId"] = new SelectList(_context.CarBrands, "Id", "BrandName", ad.BrandId);
             ViewData["PriceRangeId"] = new SelectList(_context.PriceRanges, "Id", "RangeLabel", ad.PriceRangeId);
             ViewData["RegionId"] = new SelectList(_context.Regions, "Id", "RegName", ad.RegionId);
             ViewData["TypeId"] = new SelectList(_context.CarTypes, "Id", "CarType1", ad.TypeId);
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", ad.UserId);
-            return View(ad);
         }
 
         // GET: Ads/Edit/5
@@ -127,8 +190,6 @@ namespace CarSalesInfrastructure.Controllers
         }
 
         // POST: Ads/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("UserId,TypeId,BrandId,PriceRangeId,RegionId,Price,Name,Description,CreationDate,SoldDate,Id")] Ad ad)
@@ -150,6 +211,22 @@ namespace CarSalesInfrastructure.Controllers
 
             if (ModelState.IsValid)
             {
+                // Перевіряємо, чи входить ціна в діапазон
+                var priceRange = await _context.PriceRanges
+                    .FirstOrDefaultAsync(p => p.Id == ad.PriceRangeId);
+
+                if (priceRange != null)
+                {
+                    bool isPriceInRange = IsPriceInRange(ad.Price, priceRange.RangeLabel);
+
+                    if (!isPriceInRange)
+                    {
+                        ModelState.AddModelError("Price", "Введена ціна не входить у вибраний ціновий діапазон");
+                        PrepareViewData(ad);
+                        return View(ad);
+                    }
+                }
+
                 try
                 {
                     _context.Update(ad);
@@ -168,11 +245,8 @@ namespace CarSalesInfrastructure.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["BrandId"] = new SelectList(_context.CarBrands, "Id", "BrandName", ad.BrandId);
-            ViewData["PriceRangeId"] = new SelectList(_context.PriceRanges, "Id", "RangeLabel", ad.PriceRangeId);
-            ViewData["RegionId"] = new SelectList(_context.Regions, "Id", "RegName", ad.RegionId);
-            ViewData["TypeId"] = new SelectList(_context.CarTypes, "Id", "CarType1", ad.TypeId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", ad.UserId);
+
+            PrepareViewData(ad);
             return View(ad);
         }
 
