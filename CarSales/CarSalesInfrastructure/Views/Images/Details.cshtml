@@ -1,30 +1,34 @@
 ﻿@model CarSalesDomain.Model.Image
-
 @{
-    ViewData["Title"] = "Даталі";
+    ViewData["Title"] = "Деталі";
 }
-
 <h2>Деталі</h2>
-
 <div>
     <h4>Зображення</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Path)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Path)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Ad)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Ad.Name)
         </dd>
     </dl>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <h5>Перегляд зображення:</h5>
+            <img src="/@Model.Path" class="img-fluid" style="max-width: 100%; max-height: 500px;" />
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Змінити</a> |
-    <a asp-action="Index">Повернутися до списку</a>
+<div class="mt-3">
+    @* <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary">Змінити</a> | *@
+    <a asp-action="Index" class="btn btn-secondary">Повернутися до списку</a>
 </div>

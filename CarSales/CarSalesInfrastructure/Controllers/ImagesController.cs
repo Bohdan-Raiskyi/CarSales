@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +16,12 @@ namespace CarSalesInfrastructure.Controllers
     public class ImagesController : Controller
     {
         private readonly CarSalesContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ImagesController(CarSalesContext context)
+        public ImagesController(CarSalesContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Images
@@ -53,20 +58,69 @@ namespace CarSalesInfrastructure.Controllers
         }
 
         // POST: Images/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AdId,Path,Id")] Image image)
+        public async Task<IActionResult> Create(int AdId, IFormFile imageFile)
         {
-            if (ModelState.IsValid)
+            if (imageFile == null || imageFile.Length == 0)
             {
+                TempData["ErrorMessage"] = "Будь ласка, оберіть файл зображення для завантаження.";
+                ViewData["AdId"] = new SelectList(_context.Ads, "Id", "Name", AdId);
+                return View();
+            }
+
+            // Перевірка типу файлу (дозволені лише зображення)
+            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp" };
+            string fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                TempData["ErrorMessage"] = "Дозволені тільки файли зображень (JPG, JPEG, PNG, GIF, BMP).";
+                ViewData["AdId"] = new SelectList(_context.Ads, "Id", "Name", AdId);
+                return View();
+            }
+
+            // Створюємо підпапку для оголошення, якщо вона не існує
+            string folderName = $"ads{AdId}";
+            string webRootPath = _webHostEnvironment.WebRootPath;
+            string newPath = Path.Combine(webRootPath, "images", folderName);
+
+            if (!Directory.Exists(newPath))
+            {
+                Directory.CreateDirectory(newPath);
+            }
+
+            // Генеруємо унікальне ім'я файлу
+            string fileName = Guid.NewGuid().ToString() + fileExtension;
+            string fullPath = Path.Combine(newPath, fileName);
+
+            try
+            {
+                // Зберігаємо файл
+                using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fileStream);
+                }
+
+                // Зберігаємо шлях у базі даних
+                string dbPath = Path.Combine("images", folderName, fileName).Replace("\\", "/");
+
+                Image image = new Image
+                {
+                    AdId = AdId,
+                    Path = dbPath
+                };
+
                 _context.Add(image);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AdId"] = new SelectList(_context.Ads, "Id", "Name", image.AdId);
-            return View(image);
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Помилка при завантаженні файлу: {ex.Message}";
+                ViewData["AdId"] = new SelectList(_context.Ads, "Id", "Name", AdId);
+                return View();
+            }
         }
 
         // GET: Images/Edit/5
@@ -87,39 +141,71 @@ namespace CarSalesInfrastructure.Controllers
         }
 
         // POST: Images/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AdId,Path,Id")] Image image)
+        public async Task<IActionResult> Edit(int id, int AdId, IFormFile imageFile)
         {
-            if (id != image.Id)
+            var image = await _context.Images.FindAsync(id);
+            if (image == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (imageFile != null && imageFile.Length > 0)
             {
-                try
+                // Видаляємо старий файл, якщо він існує
+                if (!string.IsNullOrEmpty(image.Path))
                 {
-                    _context.Update(image);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ImageExists(image.Id))
+                    string oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, image.Path);
+                    if (System.IO.File.Exists(oldFilePath))
                     {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
+                        System.IO.File.Delete(oldFilePath);
                     }
                 }
-                return RedirectToAction(nameof(Index));
+
+                // Створюємо підпапку для оголошення, якщо вона не існує
+                string folderName = $"ads{AdId}";
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                string newPath = Path.Combine(webRootPath, "images", folderName);
+
+                if (!Directory.Exists(newPath))
+                {
+                    Directory.CreateDirectory(newPath);
+                }
+
+                // Генеруємо унікальне ім'я файлу
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                string fullPath = Path.Combine(newPath, fileName);
+
+                // Зберігаємо файл
+                using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fileStream);
+                }
+
+                // Оновлюємо шлях у моделі
+                image.Path = Path.Combine("images", folderName, fileName).Replace("\\", "/");
             }
-            ViewData["AdId"] = new SelectList(_context.Ads, "Id", "Name", image.AdId);
-            return View(image);
+
+            image.AdId = AdId;
+
+            try
+            {
+                _context.Update(image);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ImageExists(image.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Images/Delete/5
@@ -149,22 +235,30 @@ namespace CarSalesInfrastructure.Controllers
             var image = await _context.Images.FindAsync(id);
             if (image != null)
             {
+                // Видаляємо файл
+                if (!string.IsNullOrEmpty(image.Path))
+                {
+                    string filePath = Path.Combine(_webHostEnvironment.WebRootPath, image.Path);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
                 _context.Images.Remove(image);
             }
 
             try
             {
-                _context.Images.Remove(image);
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
-                // Typically means a foreign key constraint or other DB error
+                // Типова помилка зв'язків або інша помилка бази даних
                 TempData["DeleteError"] = "Неможливо видалити зображення, оскільки існують пов'язані записи.";
                 return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
