@@ -19,9 +19,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
+            @* <th>
                 @Html.DisplayNameFor(model => model.Path)
-            </th>
+            </th> *@
             <th>
                 @Html.DisplayNameFor(model => model.Ad)
             </th>
@@ -31,14 +31,14 @@
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td>
+            @* <td>
                 @Html.DisplayFor(modelItem => item.Path)
-            </td>
+            </td> *@
             <td>
                 @Html.DisplayFor(modelItem => item.Ad.Name)
             </td>
             <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
+                    @* <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> | *@
                     <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
                     <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a>
             </td>

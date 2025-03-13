@@ -5,24 +5,34 @@
 }
 
 <h2>Змінити</h2>
-
 <h4>Зображення</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
             <div class="form-group">
                 <label asp-for="AdId" class="control-label"></label>
                 <select asp-for="AdId" class="form-control" asp-items="ViewBag.AdId"></select>
                 <span asp-validation-for="AdId" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Path" class="control-label"></label>
-                <input asp-for="Path" class="form-control" />
-                <span asp-validation-for="Path" class="text-danger"></span>
+                <label class="control-label">Поточне зображення</label>
+                <div>
+                    <img src="/@Model.Path" style="max-width: 300px; max-height: 300px;" />
+                </div>
+                <input type="hidden" asp-for="Path" />
             </div>
-            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group">
+                <label class="control-label">Нове зображення</label>
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                <small class="text-muted">Залиште порожнім, якщо не хочете змінювати зображення</small>
+                <span class="text-danger">@TempData["ErrorMessage"]</span>
+            </div>
 
             <br />
             <div class="form-group">
@@ -37,5 +47,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
