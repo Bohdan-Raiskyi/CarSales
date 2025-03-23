@@ -15,6 +15,8 @@
 
 <p>
     <a asp-action="Create">Створити</a>
+    <a asp-action="Import">Завантажити з файлу</a>
+    <a asp-action="Export">Експортувати у файл</a>
 </p>
 <table class="table">
     <thead>
@@ -89,9 +91,9 @@
                 <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a> |
-                <a asp-action="Sell" asp-route-id="@item.Id">Продати</a>
-
+                <a asp-action="Sell" asp-route-id="@item.Id">Продати</a> 
             </td>
+
         </tr>
 }
     </tbody>
