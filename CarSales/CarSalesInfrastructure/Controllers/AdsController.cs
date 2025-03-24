@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CarSalesDomain.Model;
 using CarSalesInfrastructure;
+using CarSalesInfrastructure.Services;
 
 namespace CarSalesInfrastructure.Controllers
 {
     public class AdsController : Controller
     {
         private readonly CarSalesContext _context;
+        private readonly AdDataPortServiceFactory _adDataPortServiceFactory;
 
-        public AdsController(CarSalesContext context)
+        public AdsController(CarSalesContext context, AdDataPortServiceFactory adDataPortServiceFactory)
         {
             _context = context;
+            _adDataPortServiceFactory = adDataPortServiceFactory;
         }
 
         // GET: Ads
@@ -72,6 +75,52 @@ namespace CarSalesInfrastructure.Controllers
             //return View(ad);
             return RedirectToAction("Index", "Images", new { id = ad.Id, name = ad.Name });
         }
+
+        [HttpGet]
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken cancellationToken = default)
+        {
+            if (fileExcel == null || fileExcel.Length == 0)
+            {
+                ModelState.AddModelError("", "Файл не вибрано або він порожній.");
+                return View();
+            }
+
+            var importService = _adDataPortServiceFactory.GetImportService(fileExcel.ContentType);
+
+            using var stream = fileExcel.OpenReadStream();
+            await importService.ImportFromStreamAsync(stream, cancellationToken);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Export([FromQuery] string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        CancellationToken cancellationToken = default)
+        {
+            var exportService = _adDataPortServiceFactory.GetExportService(contentType);
+
+            var memoryStream = new MemoryStream();
+
+            await exportService.WriteToAsync(memoryStream, cancellationToken);
+
+            await memoryStream.FlushAsync(cancellationToken);
+            memoryStream.Position = 0;
+
+
+            return new FileStreamResult(memoryStream, contentType)
+            {
+                FileDownloadName = $"categiries_{DateTime.UtcNow.ToShortDateString()}.xlsx"
+            };
+        }
+
+
 
         // GET: Ads/Create
         public IActionResult Create()

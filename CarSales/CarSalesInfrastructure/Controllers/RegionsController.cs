@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CarSalesDomain.Model;
 using CarSalesInfrastructure;
+using CarSalesInfrastructure.Services;
 
 namespace CarSalesInfrastructure.Controllers
 {

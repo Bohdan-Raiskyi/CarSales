@@ -15,6 +15,8 @@
 
 <p>
     <a asp-action="Create">Створити</a>
+    <a asp-action="Import">Завантажити з файлу</a>
+    <a asp-action="Export">Експортувати у файл</a>
 </p>
 <table class="table">
     <thead>
@@ -53,47 +55,48 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreationDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.SoldDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Brand.BrandName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PriceRange.RangeLabel)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Region.RegName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type.CarType1)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.Email)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a> |
-                <a asp-action="Sell" asp-route-id="@item.Id">Продати</a>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreationDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SoldDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Brand.BrandName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PriceRange.RangeLabel)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Region.RegName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Type.CarType1)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.User.Email)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Змінити</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Деталі</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Видалити</a> |
+                    <a asp-action="Sell" asp-route-id="@item.Id">Продати</a>
+                </td>
 
-            </td>
-        </tr>
-}
+            </tr>
+        }
     </tbody>
 </table>
 
