@@ -116,7 +116,7 @@ namespace CarSalesInfrastructure.Controllers
 
             return new FileStreamResult(memoryStream, contentType)
             {
-                FileDownloadName = $"categiries_{DateTime.UtcNow.ToShortDateString()}.xlsx"
+                FileDownloadName = $"ads_{DateTime.UtcNow.ToShortDateString()}.xlsx"
             };
         }
 

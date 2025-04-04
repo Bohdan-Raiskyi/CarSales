@@ -8,16 +8,65 @@ using Microsoft.EntityFrameworkCore;
 using CarSalesDomain.Model;
 using CarSalesInfrastructure;
 using System.Text.RegularExpressions;
+using CarSalesInfrastructure.Services;
 
 namespace CarSalesInfrastructure.Controllers
 {
     public class UsersController : Controller
     {
         private readonly CarSalesContext _context;
+        private readonly UserDataPortServiceFactory _userDataPortServiceFactory;
 
-        public UsersController(CarSalesContext context)
+        public UsersController(CarSalesContext context, UserDataPortServiceFactory userDataPortServiceFactory)
         {
             _context = context;
+            _userDataPortServiceFactory = userDataPortServiceFactory;
+        }
+
+        public async Task<IActionResult> Export([FromQuery] string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        CancellationToken cancellationToken = default)
+        {
+            var exportService = _userDataPortServiceFactory.GetExportService(contentType);
+            var memoryStream = new MemoryStream();
+            await exportService.WriteToAsync(memoryStream, cancellationToken);
+            await memoryStream.FlushAsync(cancellationToken);
+            memoryStream.Position = 0;
+            return new FileStreamResult(memoryStream, contentType)
+            {
+                FileDownloadName = $"users_{DateTime.UtcNow.ToShortDateString()}.xlsx"
+            };
+        }
+
+        [HttpGet]
+        public IActionResult Import()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Import(IFormFile fileExcel, CancellationToken cancellationToken = default)
+        {
+            if (fileExcel == null || fileExcel.Length == 0)
+            {
+                ModelState.AddModelError("", "Файл не вибрано або він порожній.");
+                return View();
+            }
+
+            try
+            {
+                var importService = _userDataPortServiceFactory.GetImportService(fileExcel.ContentType);
+                using var stream = fileExcel.OpenReadStream();
+                await importService.ImportFromStreamAsync(stream, cancellationToken);
+
+                TempData["SuccessMessage"] = "Користувачів успішно імпортовано";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Помилка під час імпорту: {ex.Message}");
+                return View();
+            }
         }
 
         // GET: Users

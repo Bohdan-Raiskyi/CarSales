@@ -9,6 +9,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<AdDataPortServiceFactory>();
 
+builder.Services.AddScoped<UserDataPortServiceFactory>();
+
 builder.Services.AddDbContext<CarSalesContext>(option => option.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ));
