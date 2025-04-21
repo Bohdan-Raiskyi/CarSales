@@ -11,6 +11,8 @@ builder.Services.AddScoped<AdDataPortServiceFactory>();
 
 builder.Services.AddScoped<UserDataPortServiceFactory>();
 
+builder.Services.AddScoped<RegionDataPortServiceFactory>();
+
 builder.Services.AddDbContext<CarSalesContext>(option => option.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ));
