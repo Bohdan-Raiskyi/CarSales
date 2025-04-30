@@ -2,6 +2,7 @@
 using CarSalesDomain.Model;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
@@ -12,6 +13,7 @@ namespace CarSalesInfrastructure.Services
     public class RegionImportService : IImportService<Region>
     {
         private readonly CarSalesContext _context;
+        private readonly List<string> _importLog = new();
 
         public RegionImportService(CarSalesContext context)
         {
@@ -20,113 +22,81 @@ namespace CarSalesInfrastructure.Services
 
         public async Task ImportFromStreamAsync(Stream stream, CancellationToken cancellationToken)
         {
+            _importLog.Clear();
+
             if (!stream.CanRead)
             {
-                throw new ArgumentException("Дані не можуть бути прочитані", nameof(stream));
+                _importLog.Add("Файл не читається.");
+                return;
             }
 
             using (XLWorkbook workBook = new XLWorkbook(stream))
             {
-                // Беремо перший лист для імпорту користувачів
                 var worksheet = workBook.Worksheet(1);
                 if (worksheet == null)
                 {
-                    throw new ArgumentException("Файл не містить жодного листа");
+                    _importLog.Add("Файл не містить жодного листа");
+                    return;
                 }
 
-                // Перегляд усіх рядків
-                foreach (var row in worksheet.RowsUsed().Skip(1)) // Пропустити перший рядок, бо це заголовок
+                foreach (var row in worksheet.RowsUsed().Skip(1)) // Пропустити заголовок
                 {
                     await TryAddUserAsync(row, cancellationToken);
                 }
             }
 
-            await _context.SaveChangesAsync(cancellationToken);
+            int saved = await _context.SaveChangesAsync(cancellationToken);
+            _importLog.Add($"Збережено {saved} нових регіонів.");
         }
+
+        public List<string> GetImportLog() => _importLog;
 
         private async Task TryAddUserAsync(IXLRow row, CancellationToken cancellationToken)
         {
             try
             {
-                // Отримання даних з рядка
                 string regName = GetValueOrDefault(row, 1);
 
-                // Перевірка наявності обов'язкових полів
                 if (string.IsNullOrEmpty(regName))
                 {
+                    _importLog.Add("Рядок без назви регіону — пропущено");
                     return;
                 }
 
-                // Перевірка валідності даних
                 if (!ValidateUserData(regName))
                 {
+                    _importLog.Add($"Регіон \"{regName}\" не пройшов валідацію — пропущено");
                     return;
                 }
 
-                // Перевірка чи користувач уже існує
-                var existingRegion = await _context.Regions.FirstOrDefaultAsync(u =>
-                    u.RegName == regName, cancellationToken);
+                var existingRegion = await _context.Regions.FirstOrDefaultAsync(u => u.RegName == regName, cancellationToken);
 
                 if (existingRegion != null)
                 {
-                    return; // Користувач уже існує
+                    _importLog.Add($"Регіон \"{regName}\" вже існує — пропущено");
+                    return;
                 }
 
-                // Створення нового користувача
                 Region region = new Region
                 {
                     RegName = regName
                 };
-                Console.WriteLine($"Додаю регіон: {regName}");
 
+                _importLog.Add($"Додається регіон: {regName}");
                 _context.Regions.Add(region);
             }
-            catch
+            catch (Exception ex)
             {
-                // Якщо сталася помилка при обробці рядка, просто пропускаємо його
+                _importLog.Add($"Помилка в рядку: {ex.Message}");
                 return;
             }
         }
 
-        // Валідація даних користувача
         private bool ValidateUserData(string regName)
         {
-            //createdDate = DateTime.Now;
-
-            ////Перевірка імені користувача
-            //if (userName.Length > 50)
-            //{
-            //    return false;
-            //}
-
-            ////Перевірка електронної пошти
-            //if (email.Length > 100 || !_emailRegex.IsMatch(email))
-            //{
-            //    return false;
-            //}
-
-            ////Перевірка номера телефону
-            //if (!_phoneRegex.IsMatch(phoneNumber))
-            //{
-            //    return false;
-            //}
-
-            ////Перевірка пароля
-            //if (password.Length < 8 || password.Length > 20 || !_passwordRegex.IsMatch(password))
-            //{
-            //    return false;
-            //}
-
-            ////Парсинг дати
-            //if (!DateTime.TryParse(createdDateStr, out createdDate))
-            //{
-            //    createdDate = DateTime.Now;
-            //}
-
-            return true;
+            return regName.Length <= 50;
         }
 
-        // Допоміжний метод для безпечного отримання значення з комірки
         private static string GetValueOrDefault(IXLRow row, int cellIndex)
         {
             try

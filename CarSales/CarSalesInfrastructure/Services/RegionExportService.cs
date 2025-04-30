@@ -59,7 +59,7 @@ namespace CarSalesInfrastructure.Services
                 throw new ArgumentException("Input stream is not writable");
             }
 
-            var users = await _context.Set<CarSalesDomain.Model.User>()
+            var regions = await _context.Set<CarSalesDomain.Model.Region>()
                 .ToListAsync(cancellationToken);
 
             var workbook = new XLWorkbook();
@@ -70,3 +70,6 @@ namespace CarSalesInfrastructure.Services
 
 
             workbook.SaveAs(stream);
+        }
+    }
+}
